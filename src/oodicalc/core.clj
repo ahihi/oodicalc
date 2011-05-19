@@ -49,7 +49,11 @@
   (not (nil? (get course :grade))))
 
 (defn average-with [f courses]
-  (apply / (reduce f [0 0] courses)))
+  (let [divide (fn [a b]
+                 (if (zero? b)
+                   nil
+                   (/ a b)))]
+    (apply divide (reduce f [0 0] courses))))
 
 (defn naive-grade [[gr-sum cnt] course]
   (let [grade (get course :grade)]
@@ -64,6 +68,11 @@
       [crgr-sum cr-sum]
       [(+ crgr-sum (* credits grade)) (+ cr-sum credits)])))
 
+(defn display-average [x]
+  (if (nil? x)
+    "n/a"
+    (format "%.2f" (double x))))
+
 (defn str-stats [oodi-text]
   (let [[status result] (parse-courses (string/split-lines oodi-text))]
     (case status
@@ -73,11 +82,9 @@
                      (count (filter has-grade? result)) " graded)")
                 (str (reduce #(+ %1 (get %2 :credits)) 0 result) " credits")
                 (str "Average grade (naive): "
-                     (format "%.2f"
-                             (double (average-with naive-grade result))))
+                     (display-average (average-with naive-grade result)))
                 (str "Average grade (weighted): "
-                     (format "%.2f"
-                             (double (average-with weighted-grade result))))]]
+                     (display-average (average-with weighted-grade result)))]]
           (string/join \newline result-lines))
       :error
         (let [error-text (if (empty? (string/trim result))
