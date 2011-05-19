@@ -22,16 +22,19 @@
 (defn parse-course-line [line]
   (let [[id name credits grade date grader]
           (map string/trim (string/split tab-pattern line))]
-    (if (not (nil? grader))
-      (try
-        (Course. id
-                 name
-                 (Double/parseDouble credits)
-                 (try-parse-int grade)
-                 date
-                 grader)
-        (catch NumberFormatException e
-          nil)))))
+    (if (every? empty? [id name])
+      :ignore
+      (if (nil? grader)
+        :error
+        (try
+          (Course. id
+                   name
+                   (Double/parseDouble credits)
+                   (try-parse-int grade)
+                   date
+                   grader)
+          (catch NumberFormatException e
+            :error))))))
 
 (defn parse-courses [lines]
   (loop [courses []
@@ -40,8 +43,11 @@
       [:ok courses]
       (let [line (first lines-left)
             course (parse-course-line line)]
-        (if (nil? course)
-          [:error line]
+        (case course
+          :error
+            [:error line]
+          :ignore
+            (recur courses (rest lines-left))
           (recur (conj courses course)
                  (rest lines-left)))))))
 
