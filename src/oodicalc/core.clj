@@ -26,7 +26,7 @@
       (try
         (Course. id
                  name
-                 (Integer/parseInt credits)
+                 (Double/parseDouble credits)
                  (try-parse-int grade)
                  date
                  grader)
